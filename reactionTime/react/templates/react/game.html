@@ -1,0 +1,187 @@
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  <title>
+    ReactionTime
+  </title>
+
+  <!-- Bootstrap 4 CSS -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.4/css/bootstrap.min.css" integrity="sha384-2hfp1SzUoho7/TsGGGDaFdsuuDL0LX2hnUp6VkX3CUQ2K4K+xjboZdsXyp4oUHZj" crossorigin="anonymous">
+  <!-- Font Awesome -->
+  <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-T8Gy5hrqNKT+hzMclPo118YTQO6cYprQmhrYwIiQ/3axmI1hQomh7Ud2hPOy8SP1" crossorigin="anonymous">
+</head>
+<body>
+
+  <div class="container">
+    <div class="row">
+      <div class="col-md-12">
+        <h1 class="display-1 text-xs-center">ReactionTime</h1>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-4 offset-md-4">
+        <p>
+          The average human reaction time is about <b>278 ms</b>. How can you do?
+        </p>
+        <p>
+          Click the box as soon as it turns green.
+          You'll do this 5 times, and your score will be your average reaction time.
+          If you click before it turns green, your score will be invalidated!
+        </p>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-4 offset-md-4" id="usernameDiv">
+        <label for="username">Username:</label>
+        <input type="text" class="form-control form-control-danger" id="username" placeholder="Enter username">
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-4 offset-md-4">
+        <button type="button" class="btn btn-primary" style="margin-top: 20px;" id="startBtn">Start Test</button>
+        <a href="scores"><button type="button" class="btn btn-primary" style="margin-top: 20px" id="scoresBtn">High Scores</button></a>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-4 offset-md-4">
+        <div id="gameArea" style=" margin-top: 20px; height: 375px; width: 100%; background-color: #DDDDDD"></div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-4 offset-md-4">
+        <p id="yourScore"></p>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- jQuery, Tether, and Bootstrap js -->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.0.0/jquery.min.js" integrity="sha384-THPy051/pYDQGanwU6poAc/hOdQxjnOEXzbT+OuUAFqNqFjL+4IGLBgCJC3ZOShY" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.2.0/js/tether.min.js" integrity="sha384-Plbmg8JY28KFelvJVai01l8WyZzrYWG825m+cZ0eDDS1f7d/js6ikvy1+X+guPIB" crossorigin="anonymous"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.4/js/bootstrap.min.js" integrity="sha384-VjEeINv9OSwtWFLAtmc4JCtEJXXBub00gtSnszmspDLCtC0I4z4nqz7rEFbIZLLU" crossorigin="anonymous"></script>
+
+  <script type="text/javascript">
+    var debug = true;
+    var randArray = [];
+    var start;
+    var end;
+    var phase;
+    var scores = [];
+
+    // Helper Functions
+    function reset() {
+      randArray = [];
+      scores = [];
+      start = 0;
+      end = 0;
+      phase = 0;
+    }
+    function green() {
+      $('#gameArea').css("background-color", "#88FF88")
+      if(debug) console.log("Green");
+
+      start = +new Date();
+    }
+    function red() {
+      $('#gameArea').css("background-color", "#FF8888")
+      if(debug) console.log("Red");
+    }
+    function getRandomInt(min, max) {
+      min = Math.ceil(min);
+      max = Math.floor(max);
+      return Math.floor(Math.random() * (max - min)) + min;
+    }
+
+    //Main Functions
+
+    function startGame() {
+      // Make sure we've got a username
+      if($("#username").val() == "") {
+        $("#usernameDiv").addClass("has-danger");
+        return;
+      }
+      $("#usernameDiv").removeClass("has-danger");
+      // Reset game vars
+      reset();
+
+      // Disable the start button
+      $('#startBtn').addClass('disabled');
+
+      //Show the gamboard in red
+      $('#gameArea').show();
+      red();
+      // Generate the random delays
+      for(var i = 0; i < 5; i++) {
+        randArray[i] = getRandomInt(2000, 10000);
+      }
+      if(debug) console.log(randArray);
+
+      phase = 0;
+      if(debug) console.log("Setting delay for " + randArray[phase] + " millis...")
+      setTimeout(green, randArray[phase]);
+    }
+
+    function gameAreaClicked() {
+      end = +new Date();
+      scores[phase] = end - start;
+      if(debug) console.log("Score: " + scores[phase] + " ms")
+
+      if(scores[phase] > 100000) {
+        endGame(false);
+        return;
+      }
+
+      phase++;
+      red();
+      start = 0;
+      if (phase < 5) {
+        if(debug) console.log("Invoking phase "+ phase);
+        if(debug) console.log("Setting delay for " + randArray[phase] + " millis...")
+        setTimeout(green, randArray[phase]);
+      }
+      else endGame(true);
+    }
+
+    function endGame(isValid) {
+      if(debug) console.log("Ending game");
+      $('#gameArea').hide();
+
+      //Average the scores
+      var sum = 0;
+      for(var i=0; i < scores.length; i++){
+          sum += scores[i];
+      }
+      var avgScore = sum/scores.length;
+      avgScore = parseInt(avgScore)
+      if(debug) console.log("Average score: " + avgScore);
+
+      //Send the score to the serve
+      if(isValid) {
+        sendScore(avgScore);
+        $('#yourScore').html("Your score: <b>" + avgScore + "ms</b> (lower is better)");
+      }
+      else {
+        $('#yourScore').html("Your score was invalidated!");
+      }
+
+
+      $('#startBtn').html("Restart Game");
+      $('#startBtn').removeClass('disabled');
+    }
+
+    function sendScore(avgScore) {
+      var name = $("#username").val()
+      console.log("Sending " + name + "'s score of " + avgScore)
+      $.post( "scores/", { username: name, score: avgScore } );
+    }
+
+    //Attach event handlers
+    $('document').ready(function() {
+      $('#startBtn').click(startGame);
+      $('#gameArea').mousedown(gameAreaClicked);
+    });
+
+
+  </script>
+</body>
